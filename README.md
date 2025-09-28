@@ -67,12 +67,6 @@ t2stock
 
 The application will launch with a terminal UI showing real-time stock prices and market data.
 
-### Available Commands
-```bash
-t2stock --help     # Show help information
-t2stock --version  # Display version information
-```
-
 ### Features
 - Real-time stock price tracking
 - Terminal-based user interface
