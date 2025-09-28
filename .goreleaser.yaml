@@ -57,3 +57,4 @@ aurs:
     homepage: "https://github.com/franpfeiffer/t2stock"
     description: "Real-time stock price tracker"
     private_key: "{{ .Env.AUR_KEY }}"
+
