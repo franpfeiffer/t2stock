@@ -1,0 +1,59 @@
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    - go test ./...
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+      - freebsd
+    goarch:
+      - amd64
+      - arm64
+      - arm
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+
+archives:
+  - format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+
+nfpms:
+  - id: packages
+    formats:
+      - deb
+      - rpm
+      - apk
+    maintainer: "frn <pfeifferfran02@gmail.com>"
+    description: "Real-time stock price tracker"
+    license: "MIT"
+
+brews:
+  - repository:
+      owner: franpfeiffer
+      name: homebrew-franpfeiffer
+    homepage: "https://github.com/franpfeiffer/homebrew-t2stock"
+    description: "Real-time stock price tracker"
+
+scoops:
+  - repository:
+      owner: franpfeiffer
+      name: scoop-t2stock
+    homepage: "https://github.com/franpfeiffer/scoop-t2stock"
+    description: "Real-time stock price tracker"
+
+aurs:
+  - name: "t2stock-bin"
+    homepage: "https://github.com/franpfeiffer/t2stock"
+    description: "Real-time stock price tracker"
+    private_key: "{{ .Env.AUR_KEY }}"
