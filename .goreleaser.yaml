@@ -41,7 +41,7 @@ nfpms:
 brews:
   - repository:
       owner: franpfeiffer
-      name: homebrew-franpfeiffer
+      name: homebrew-t2stock
     homepage: "https://github.com/franpfeiffer/homebrew-t2stock"
     description: "Real-time stock price tracker"
 
