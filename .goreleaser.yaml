@@ -42,14 +42,14 @@ brews:
   - repository:
       owner: franpfeiffer
       name: homebrew-t2stock
-    homepage: "https://github.com/franpfeiffer/homebrew-t2stock"
+    homepage: "https://github.com/franpfeiffer/homebrew-t2stock/Formula"
     description: "Real-time stock price tracker"
 
 scoops:
   - repository:
       owner: franpfeiffer
       name: scoop-t2stock
-    homepage: "https://github.com/franpfeiffer/scoop-t2stock"
+    homepage: "https://github.com/franpfeiffer/scoop-t2stock/bucket"
     description: "Real-time stock price tracker"
 
 aurs:
