@@ -2,6 +2,7 @@ package main
 
 import (
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -20,7 +21,7 @@ type Model struct {
 
 func NewModel() Model {
 	ti := textinput.New()
-	ti.Placeholder = "Enter your Polygon.io API key..."
+	ti.Placeholder = "Enter your Finnhub API key..."
 	ti.Focus()
 	ti.CharLimit = 100
 	ti.Width = 50
@@ -45,7 +46,7 @@ func (m Model) SetTable(t table.Model) Model {
 
 func (m Model) Init() tea.Cmd {
 	if m.state == LoadingState {
-		return FetchStockData(m.apiKey)
+		return tea.Batch(FetchStockData(m.apiKey), AutoRefresh(m.apiKey, 2*60*time.Second))
 	}
 	return textinput.Blink
 }
@@ -67,12 +68,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "enter":
 				if strings.TrimSpace(m.textInput.Value()) != "" {
 					m.apiKey = strings.TrimSpace(m.textInput.Value())
-
-					config := &Config{APIKey: m.apiKey}
-					SaveConfig(config)
-
+					SaveConfig(&Config{APIKey: m.apiKey})
 					m.state = LoadingState
-					return m, FetchStockData(m.apiKey)
+					return m, tea.Batch(FetchStockData(m.apiKey), AutoRefresh(m.apiKey, 2*60*time.Second))
 				}
 			}
 
@@ -82,15 +80,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, tea.Quit
 			case "r":
 				m.state = LoadingState
-				return m, FetchStockData(m.apiKey)
+				return m, tea.Batch(FetchStockData(m.apiKey), AutoRefresh(m.apiKey, 2*60*time.Second))
 			case "b":
 				m.state = InputState
 				m.textInput.SetValue("")
 				m.textInput.Focus()
 				return m, textinput.Blink
 			case "c":
-				config := &Config{APIKey: ""}
-				SaveConfig(config)
+				SaveConfig(&Config{APIKey: ""})
 				m.state = InputState
 				m.textInput.SetValue("")
 				m.textInput.Focus()
@@ -108,7 +105,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, textinput.Blink
 			case "r":
 				m.state = LoadingState
-				return m, FetchStockData(m.apiKey)
+				return m, tea.Batch(FetchStockData(m.apiKey), AutoRefresh(m.apiKey, 2*60*time.Second))
 			}
 		}
 
@@ -127,9 +124,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				stock.Name,
 				stock.Price,
 				changeColor + stock.Change,
+				stock.Timestamp,
 			}
 		}
 		m.table.SetRows(rows)
+		cmd = AutoRefresh(m.apiKey, 2*60*time.Second)
 
 	case ErrMsg:
 		m.state = ErrorState

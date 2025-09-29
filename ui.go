@@ -49,12 +49,12 @@ func (m Model) View() string {
 		content := lipgloss.JoinVertical(lipgloss.Center,
 			titleStyle.Render("T2Stock"),
 			"",
-			instructionStyle.Render("Enter your Polygon.io API key to get started"),
+			instructionStyle.Render("Enter your Finnhub API key to get started"),
 			"",
 			inputStyle.Render(m.textInput.View()),
 			"",
-			helpStyle.Render("Get your free API key at https://polygon.io"),
-			helpStyle.Render("Free tier: End-of-day data, 5 calls/min, 2 years history"),
+			helpStyle.Render("Get your free API key at https://finnhub.io"),
+			helpStyle.Render("Free tier: real-time quotes, 60 calls/min"),
 			"",
 			instructionStyle.Render("Press Enter to continue, Ctrl+C to quit"),
 		)
@@ -71,9 +71,9 @@ func (m Model) View() string {
 		content := lipgloss.JoinVertical(lipgloss.Center,
 			titleStyle.Render("T2Stock"),
 			"",
-			loadingStyle.Render("Fetching end-of-day stock data"+dots),
-			loadingStyle.Render("Connecting to Polygon.io"+dots),
-			loadingStyle.Render("Shoud take about a minute."),
+			loadingStyle.Render("Fetching real-time stock data"+dots),
+			loadingStyle.Render("Connecting to Finnhub.io"+dots),
+			loadingStyle.Render("Should take just a few seconds."),
 		)
 		return containerStyle.Render(content)
 
@@ -95,7 +95,7 @@ func (m Model) View() string {
 			"",
 			tableStyle.Render(m.table.View()),
 			helpStyle.Render("Press 'r' to refresh, 'b' for new API key, 'c' to clear saved key, 'q' to quit"),
-			helpStyle.Render("End-of-day data from Polygon.io"),
+			helpStyle.Render("Real-time quotes from Finnhub.io"),
 		)
 		return containerStyle.Render(content)
 
