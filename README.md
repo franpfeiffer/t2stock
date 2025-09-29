@@ -1,7 +1,7 @@
 # T2Stock
 
 **T2Stock** is a terminal-based real-time stock price tracker built with Go.
-The name comes from Time Tracker (2 t's -> T2, other tui I've made) and the Stock part is because
+The name comes from Time Tracker (2 t's -> [T2](https://github.com/franpfeiffer/t2), other tui I've made) and the Stock part is because
 I'm a big fan of stocks.
 
 
