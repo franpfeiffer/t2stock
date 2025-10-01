@@ -1,4 +1,4 @@
-package main
+package provider
 
 import (
 	"encoding/json"
@@ -8,6 +8,8 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+
+	"github.com/franpfeiffer/t2stock/internal/models"
 )
 
 func GetCompanyName(symbol string) string {
@@ -24,32 +26,32 @@ func GetCompanyName(symbol string) string {
 	return symbol
 }
 
-func FetchFinnhubStock(symbol, apiKey string) (Stock, error) {
+func FetchFinnhubStock(symbol, apiKey string) (models.Stock, error) {
 	url := fmt.Sprintf("https://finnhub.io/api/v1/quote?symbol=%s&token=%s", symbol, apiKey)
 	client := &http.Client{Timeout: 15 * time.Second}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return Stock{}, err
+		return models.Stock{}, err
 	}
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("User-Agent", "T2Stock/1.0")
 	resp, err := client.Do(req)
 	if err != nil {
-		return Stock{}, err
+		return models.Stock{}, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == 401 {
-		return Stock{}, fmt.Errorf("invalid API key")
+		return models.Stock{}, fmt.Errorf("invalid API key")
 	}
 	if resp.StatusCode == 429 {
-		return Stock{}, fmt.Errorf("rate limit exceeded - free tier allows 60 calls/min")
+		return models.Stock{}, fmt.Errorf("rate limit exceeded - free tier allows 60 calls/min")
 	}
 	if resp.StatusCode != 200 {
-		return Stock{}, fmt.Errorf("API error %d", resp.StatusCode)
+		return models.Stock{}, fmt.Errorf("API error %d", resp.StatusCode)
 	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return Stock{}, err
+		return models.Stock{}, err
 	}
 	var quote struct {
 		Current       float64 `json:"c"`
@@ -58,7 +60,7 @@ func FetchFinnhubStock(symbol, apiKey string) (Stock, error) {
 		Timestamp     int64   `json:"t"`
 	}
 	if err := json.Unmarshal(body, &quote); err != nil {
-		return Stock{}, err
+		return models.Stock{}, err
 	}
 	price := fmt.Sprintf("$%.2f", quote.Current)
 	changeStr := fmt.Sprintf("%.2f (%.2f%%)", quote.Change, quote.ChangePercent)
@@ -66,7 +68,7 @@ func FetchFinnhubStock(symbol, apiKey string) (Stock, error) {
 		changeStr = "+" + changeStr
 	}
 	ts := time.Unix(quote.Timestamp, 0).In(time.Local).Format("2006-01-02 15:04:05")
-	return Stock{
+	return models.Stock{
 		Symbol:    symbol,
 		Name:      GetCompanyName(symbol),
 		Price:     price,
@@ -78,14 +80,14 @@ func FetchFinnhubStock(symbol, apiKey string) (Stock, error) {
 func FetchStockData(apiKey string) tea.Cmd {
 	return func() tea.Msg {
 		symbols := []string{"AAPL", "GOOGL", "AMZN", "SONY", "SPY"}
-		var stockData []Stock
+		var stockData []models.Stock
 		for _, symbol := range symbols {
 			stock, err := FetchFinnhubStock(symbol, apiKey)
 			if err != nil {
 				if len(stockData) == 0 {
-					return ErrMsg(err)
+					return models.ErrMsg(err)
 				}
-				stock = Stock{
+				stock = models.Stock{
 					Symbol:    symbol,
 					Name:      GetCompanyName(symbol),
 					Price:     "N/A",
@@ -96,7 +98,7 @@ func FetchStockData(apiKey string) tea.Cmd {
 			stockData = append(stockData, stock)
 			time.Sleep(1 * time.Second)
 		}
-		return StockDataMsg(stockData)
+		return models.StockDataMsg(stockData)
 	}
 }
 

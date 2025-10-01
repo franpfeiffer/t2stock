@@ -1,4 +1,4 @@
-package main
+package ui
 
 import (
 	"strings"
@@ -7,10 +7,14 @@ import (
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+
+	"github.com/franpfeiffer/t2stock/internal/models"
+	"github.com/franpfeiffer/t2stock/internal/provider"
+	"github.com/franpfeiffer/t2stock/internal/storage"
 )
 
 type Model struct {
-	state     AppState
+	state     models.AppState
 	textInput textinput.Model
 	table     table.Model
 	apiKey    string
@@ -27,13 +31,13 @@ func NewModel() Model {
 	ti.Width = 50
 
 	m := Model{
-		state:     InputState,
+		state:     models.InputState,
 		textInput: ti,
 	}
 
-	if config, err := LoadConfig(); err == nil && config.APIKey != "" {
+	if config, err := storage.LoadConfig(); err == nil && config.APIKey != "" {
 		m.apiKey = config.APIKey
-		m.state = LoadingState
+		m.state = models.LoadingState
 	}
 
 	return m
@@ -45,8 +49,8 @@ func (m Model) SetTable(t table.Model) Model {
 }
 
 func (m Model) Init() tea.Cmd {
-	if m.state == LoadingState {
-		return tea.Batch(FetchStockData(m.apiKey), AutoRefresh(m.apiKey, 2*60*time.Second))
+	if m.state == models.LoadingState {
+		return tea.Batch(provider.FetchStockData(m.apiKey), provider.AutoRefresh(m.apiKey, 2*60*time.Second))
 	}
 	return textinput.Blink
 }
@@ -61,56 +65,56 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		switch m.state {
-		case InputState:
+		case models.InputState:
 			switch msg.String() {
 			case "ctrl+c", "esc":
 				return m, tea.Quit
 			case "enter":
 				if strings.TrimSpace(m.textInput.Value()) != "" {
 					m.apiKey = strings.TrimSpace(m.textInput.Value())
-					SaveConfig(&Config{APIKey: m.apiKey})
-					m.state = LoadingState
-					return m, tea.Batch(FetchStockData(m.apiKey), AutoRefresh(m.apiKey, 2*60*time.Second))
+					storage.SaveConfig(&models.Config{APIKey: m.apiKey})
+					m.state = models.LoadingState
+					return m, tea.Batch(provider.FetchStockData(m.apiKey), provider.AutoRefresh(m.apiKey, 2*60*time.Second))
 				}
 			}
 
-		case StocksState:
+		case models.StocksState:
 			switch msg.String() {
 			case "q", "ctrl+c":
 				return m, tea.Quit
 			case "r":
-				m.state = LoadingState
-				return m, tea.Batch(FetchStockData(m.apiKey), AutoRefresh(m.apiKey, 2*60*time.Second))
+				m.state = models.LoadingState
+				return m, tea.Batch(provider.FetchStockData(m.apiKey), provider.AutoRefresh(m.apiKey, 2*60*time.Second))
 			case "b":
-				m.state = InputState
+				m.state = models.InputState
 				m.textInput.SetValue("")
 				m.textInput.Focus()
 				return m, textinput.Blink
 			case "c":
-				SaveConfig(&Config{APIKey: ""})
-				m.state = InputState
+				storage.SaveConfig(&models.Config{APIKey: ""})
+				m.state = models.InputState
 				m.textInput.SetValue("")
 				m.textInput.Focus()
 				return m, textinput.Blink
 			}
 
-		case ErrorState:
+		case models.ErrorState:
 			switch msg.String() {
 			case "q", "ctrl+c":
 				return m, tea.Quit
 			case "b":
-				m.state = InputState
+				m.state = models.InputState
 				m.textInput.SetValue("")
 				m.textInput.Focus()
 				return m, textinput.Blink
 			case "r":
-				m.state = LoadingState
-				return m, tea.Batch(FetchStockData(m.apiKey), AutoRefresh(m.apiKey, 2*60*time.Second))
+				m.state = models.LoadingState
+				return m, tea.Batch(provider.FetchStockData(m.apiKey), provider.AutoRefresh(m.apiKey, 2*60*time.Second))
 			}
 		}
 
-	case StockDataMsg:
-		m.state = StocksState
+	case models.StockDataMsg:
+		m.state = models.StocksState
 		rows := make([]table.Row, len(msg))
 		for i, stock := range msg {
 			changeColor := ""
@@ -128,16 +132,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 		m.table.SetRows(rows)
-		cmd = AutoRefresh(m.apiKey, 2*60*time.Second)
+		cmd = provider.AutoRefresh(m.apiKey, 2*60*time.Second)
 
-	case ErrMsg:
-		m.state = ErrorState
+	case models.ErrMsg:
+		m.state = models.ErrorState
 		m.err = msg
 	}
 
-	if m.state == InputState {
+	if m.state == models.InputState {
 		m.textInput, cmd = m.textInput.Update(msg)
-	} else if m.state == StocksState {
+	} else if m.state == models.StocksState {
 		m.table, cmd = m.table.Update(msg)
 	}
 

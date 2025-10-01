@@ -1,9 +1,11 @@
-package main
+package storage
 
 import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+
+	"github.com/franpfeiffer/t2stock/internal/models"
 )
 
 func GetConfigPath() (string, error) {
@@ -18,14 +20,14 @@ func GetConfigPath() (string, error) {
 	return filepath.Join(configDir, "config.json"), nil
 }
 
-func LoadConfig() (*Config, error) {
+func LoadConfig() (*models.Config, error) {
 	configPath, err := GetConfigPath()
 	if err != nil {
 		return nil, err
 	}
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		return &Config{}, nil
+		return &models.Config{}, nil
 	}
 
 	data, err := os.ReadFile(configPath)
@@ -33,7 +35,7 @@ func LoadConfig() (*Config, error) {
 		return nil, err
 	}
 
-	var config Config
+	var config models.Config
 	if err := json.Unmarshal(data, &config); err != nil {
 		return nil, err
 	}
@@ -41,7 +43,7 @@ func LoadConfig() (*Config, error) {
 	return &config, nil
 }
 
-func SaveConfig(config *Config) error {
+func SaveConfig(config *models.Config) error {
 	configPath, err := GetConfigPath()
 	if err != nil {
 		return err

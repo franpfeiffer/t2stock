@@ -1,15 +1,19 @@
-package main
+package ui
 
 import (
 	"strings"
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
+
+	"github.com/franpfeiffer/t2stock/internal/models"
 )
 
 var (
-	gray = lipgloss.Color("#999999")
-	red  = lipgloss.Color("#FF6B6B")
+	softPink = lipgloss.Color("#FFB6C1")
+	deepPink = lipgloss.Color("#FF1493")
+	gray     = lipgloss.Color("#999999")
+	red      = lipgloss.Color("#FF6B6B")
 )
 
 func (m Model) View() string {
@@ -28,7 +32,7 @@ func (m Model) View() string {
 		BorderForeground(deepPink)
 
 	switch m.state {
-	case InputState:
+	case models.InputState:
 		inputStyle := lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(softPink).
@@ -60,7 +64,7 @@ func (m Model) View() string {
 		)
 		return containerStyle.Render(content)
 
-	case LoadingState:
+	case models.LoadingState:
 		loadingStyle := lipgloss.NewStyle().
 			Foreground(softPink).
 			Align(lipgloss.Center).
@@ -77,7 +81,7 @@ func (m Model) View() string {
 		)
 		return containerStyle.Render(content)
 
-	case StocksState:
+	case models.StocksState:
 		tableStyle := lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(softPink).
@@ -99,7 +103,7 @@ func (m Model) View() string {
 		)
 		return containerStyle.Render(content)
 
-	case ErrorState:
+	case models.ErrorState:
 		errorStyle := lipgloss.NewStyle().
 			Foreground(red).
 			Align(lipgloss.Center).
